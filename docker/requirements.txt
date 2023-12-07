@@ -1,0 +1,9 @@
+accelerate~=0.21.0
+datasets~=2.14.0
+numpy~=1.23.5
+pyyaml
+scipy~=1.10.1
+tensorboard~=2.14.0
+timm~=0.4.12
+tqdm
+transformers~=4.31.0

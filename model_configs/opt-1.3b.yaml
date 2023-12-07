@@ -1,0 +1,7 @@
+max_position_embeddings: 1024
+ffn_dim: 8192
+hidden_size: 2048
+num_hidden_layers: 24
+num_attention_heads: 32
+init_std: 0.006
+dropout: 0.1
