@@ -108,7 +108,7 @@ def main():
             )
 
     accelerator = Accelerator(
-        gradient_accumulation_steps=config.gradient_accumulation_steps, **accelerator_log_kwargs
+        gradient_accumulation_steps=args.gradient_accumulation_steps, **accelerator_log_kwargs
     )
 
     logger.info(accelerator.state)

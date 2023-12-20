@@ -123,7 +123,7 @@ def main():
             os.environ['WANDB_LOG_MODEL'] = 'checkpoint' # upload model artifacts
 
     accelerator = Accelerator(
-        gradient_accumulation_steps=config.gradient_accumulation_steps, **accelerator_log_kwargs
+        gradient_accumulation_steps=args.gradient_accumulation_steps, **accelerator_log_kwargs
     )
     accelerator.project_configuration.total_limit = 1
     accelerator.project_configuration.automatic_checkpoint_naming = True
@@ -484,7 +484,7 @@ def main():
 
     # Scheduler and math around the number of training steps.
     overrode_max_train_steps = False
-    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / config.gradient_accumulation_steps)
+    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
     if config.max_train_steps is None:
         config.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
         overrode_max_train_steps = True
@@ -506,7 +506,7 @@ def main():
     )
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
-    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / config.gradient_accumulation_steps)
+    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
     if overrode_max_train_steps:
         config.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
     # Afterwards we recalculate our number of training epochs
@@ -529,7 +529,7 @@ def main():
     total_batch_size = (
         config.per_device_train_batch_size
         * accelerator.num_processes
-        * config.gradient_accumulation_steps
+        * args.gradient_accumulation_steps
     )
 
     logger.info("***** Running training *****")
@@ -539,7 +539,7 @@ def main():
     logger.info(
         f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}"
     )
-    logger.info(f"  Gradient Accumulation steps = {config.gradient_accumulation_steps}")
+    logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
     logger.info(f"  Total optimization steps = {config.max_train_steps}")
     # Only show the progress bar once on each machine.
     progress_bar = tqdm(range(config.max_train_steps), disable=not accelerator.is_local_main_process)
@@ -565,7 +565,7 @@ def main():
         completed_steps = int(training_difference.replace("checkpoint_", ""))
         logger.info(f"Resuming training from opt. step {completed_steps} ...")
         # total number of forward passes (since the start of the training):
-        resume_step = completed_steps * config.gradient_accumulation_steps
+        resume_step = completed_steps * args.gradient_accumulation_steps
         # compute starting epoch
         starting_epoch = resume_step // len(train_dataloader)
         # number of forward passes (since the start of the current epoch):

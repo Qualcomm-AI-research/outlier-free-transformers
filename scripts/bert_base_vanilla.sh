@@ -19,6 +19,7 @@ accelerate launch --config_file accelerate_configs/1gpu_fp16.yaml run_mlm.py \
 --config_name bert-base-uncased \
 --config_path model_configs/bert-15m.yaml \
 --checkpointing_steps 50000 \
+--gradient_accumulation_steps 1 \
 --attn_softmax vanilla \
 --output_dir output \
 --train_percentage 1 \
