@@ -403,7 +403,7 @@ def main():
                 batched=True,
                 num_proc=args.preprocessing_num_workers,
                 keep_in_memory=True,
-                remove_columns=tokenized_datasets[0].column_names,
+                remove_columns=tokenized_datasets['validation'].column_names,
                 desc=f'Count tokens'
             )
             print(token_dataset_dict.column_names)
