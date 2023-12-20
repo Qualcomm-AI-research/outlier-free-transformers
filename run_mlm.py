@@ -393,7 +393,7 @@ def main():
         
         token_counts = {}
         for split in tokenized_datasets.keys():
-            tokens_for_split = sum(sum(batch.pop("count") for batch in tokenized_datasets[split]))
+            tokens_for_split = sum(batch.pop("count") for batch in tokenized_datasets[split])
             token_counts[split] = tokens_for_split
         accelerator.print(f"total token counts: {token_counts}")
         
