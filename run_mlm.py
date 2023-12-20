@@ -410,11 +410,11 @@ def main():
             print(token_dataset_dict)
             print(token_dataset_dict.keys())
             print(token_dataset_dict.values())
-            for ds in token_dataset_dict:
-                print(ds)
-                print(ds['sum'])
-                print(sum(ds['sum']))
-            token_sum = sum(sum(ds['sum']) for k,ds in token_dataset_dict)
+            for key in token_dataset_dict:
+                print(key)
+                print(token_dataset_dict[key]['sum'])
+                print(sum(token_dataset_dict[key]['sum']))
+            token_sum = sum(sum(token_dataset_dict[key]['sum']) for key in token_dataset_dict)
             accelerator.print(f"Total tokens: {token_sum}")
         
         if dataset_setup == DatasetSetups.bookcorpus_and_wiki:
