@@ -97,7 +97,7 @@ def main():
         # MZ: Support WandB logging
         if args.report_to == 'wandb':
             import wandb
-            wandb_run_name = args.config_name + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+            wandb_run_name = args.config_name + '-' + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
             wandb.init(
                 project=args.project_name,
                 name=wandb_run_name,
