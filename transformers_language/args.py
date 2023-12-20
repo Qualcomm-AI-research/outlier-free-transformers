@@ -275,6 +275,13 @@ def parse_args():
         help="How often to update the progress bar. "
         "Note that using small value might generate large log files.",
     )
+    
+    parser.add_argument(
+        "--project_name",
+        type=str,
+        default="huggingface",
+        help="Project name for experiment tracking, i.e. WandB",
+    )
 
     #
     ## Regularization

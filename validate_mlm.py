@@ -20,6 +20,7 @@ from accelerate import Accelerator
 from accelerate.utils import set_seed
 from datasets import DatasetDict, load_dataset, load_from_disk
 from timm.utils import AverageMeter
+from datetime import datetime
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 from transformers import (
@@ -93,6 +94,9 @@ def main():
     if args.with_tracking:
         accelerator_log_kwargs["log_with"] = args.report_to
         accelerator_log_kwargs["logging_dir"] = args.output_dir
+        # MZ: Support WandB logging
+        accelerator_log_kwargs["run_name"] = args.config_name + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        os.environ['WANDB_PROJECT'] = args.project_name
 
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps, **accelerator_log_kwargs

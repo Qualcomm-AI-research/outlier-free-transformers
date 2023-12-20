@@ -1,7 +1,8 @@
 #!/bin/bash
 accelerate launch --config_file accelerate_configs/1gpu_fp16.yaml run_mlm.py \
 --with_tracking \
---report_to tensorboard \
+--report_to wandb \
+--project_name quantizable_transformers
 --extra_tb_stats \
 --seed 1000 \
 --dataset_setup bookcorpus_and_wiki \

@@ -7,3 +7,4 @@ tensorboard~=2.14.0
 timm~=0.4.12
 tqdm
 transformers~=4.31.0
+wandb

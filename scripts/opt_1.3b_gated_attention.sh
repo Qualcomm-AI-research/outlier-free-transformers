@@ -2,7 +2,8 @@
 accelerate launch --config_file accelerate_configs/1gpu_fp16.yaml run_clm.py \
 --pad_to_max_length \
 --with_tracking \
---report_to tensorboard \
+--report_to wandb \
+--project_name quantizable_transformers
 --seed 1000 \
 --dataset_setup bookcorpus_and_wiki \
 --preprocessing_num_workers 4 \
