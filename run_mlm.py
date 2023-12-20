@@ -406,14 +406,7 @@ def main():
                 remove_columns=tokenized_datasets['validation'].column_names,
                 desc=f'Count tokens'
             )
-            print(token_dataset_dict.column_names)
-            print(token_dataset_dict)
-            print(token_dataset_dict.keys())
-            print(token_dataset_dict.values())
-            for key in token_dataset_dict:
-                print(key)
-                print(token_dataset_dict[key]['sum'])
-                print(sum(token_dataset_dict[key]['sum']))
+            
             token_sum = sum(sum(token_dataset_dict[key]['sum']) for key in token_dataset_dict)
             accelerator.print(f"Total tokens: {token_sum}")
         
