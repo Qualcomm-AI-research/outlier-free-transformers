@@ -391,9 +391,8 @@ def main():
             )
             
             
-        def count_tokens(examples):
-            print(examples[0])
-            return {'sum': [len(example['input_ids']) for example in examples]}
+        def count_tokens(batch):
+            return {'sum': [len(ids) for ids in batch]}
         
         # We can use .map to .reduce: https://github.com/huggingface/datasets/pull/5533#issuecomment-1440571658
         
