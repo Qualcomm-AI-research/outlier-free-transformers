@@ -66,7 +66,7 @@ def parse_args():
     )
     parser.add_argument(
         "--use_slow_tokenizer",
-        action="store_true",
+        action="store_false",
         help="If passed, will use a slow tokenizer (not backed by the 🤗 Tokenizers library).",
     )
     parser.add_argument(

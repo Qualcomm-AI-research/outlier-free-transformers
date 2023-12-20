@@ -77,6 +77,7 @@ def main():
     if args.with_tracking:
         accelerator_log_kwargs["log_with"] = args.report_to
         accelerator_log_kwargs["logging_dir"] = args.output_dir
+        
         # MZ: Support WandB logging
         if args.report_to == 'wandb':
             import wandb
@@ -84,10 +85,9 @@ def main():
             wandb.init(
                 project=args.project_name,
                 name=wandb_run_name,
-                config=vars(args),
                 resume=args.resume_from_checkpoint,
+                allow_val_change=True,
             )
-
 
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps, **accelerator_log_kwargs

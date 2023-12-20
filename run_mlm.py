@@ -12,6 +12,7 @@ from collections import OrderedDict
 from itertools import chain
 from pathlib import Path
 
+import colored_traceback.auto # MZ: make error tracebacks colorful
 import datasets
 import torch
 import transformers
@@ -73,7 +74,7 @@ def main():
     if args.with_tracking:
         accelerator_log_kwargs["log_with"] = args.report_to
         accelerator_log_kwargs["project_dir"] = args.output_dir
-        # MZ: Support WandB logging
+        
         # MZ: Support WandB logging
         if args.report_to == 'wandb':
             import wandb
@@ -81,8 +82,8 @@ def main():
             wandb.init(
                 project=args.project_name,
                 name=wandb_run_name,
-                config=vars(args),
                 resume=args.resume_from_checkpoint,
+                allow_val_change=True
             )
             os.environ['WANDB_LOG_MODEL'] = 'checkpoint' # upload model artifacts
 
@@ -472,7 +473,7 @@ def main():
         experiment_config = vars(args)
         # TensorBoard cannot log Enums, need the raw value
         experiment_config["lr_scheduler_type"] = experiment_config["lr_scheduler_type"].value
-        accelerator.init_trackers("tb_logs", experiment_config)
+        accelerator.init_trackers(args.project_name, experiment_config)
 
     # Train!
     total_batch_size = (
