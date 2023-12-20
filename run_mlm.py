@@ -292,9 +292,9 @@ def main():
             assert bookcorpus.features.type == wiki_train.features.type
 
             raw_datasets = DatasetDict()
-            raw_datasets["train_book"] = bookcorpus[:10]
-            raw_datasets["train_wiki"] = wiki_train[:10]
-            raw_datasets["validation"] = wiki_val[:10]
+            raw_datasets["train_book"] = bookcorpus
+            raw_datasets["train_wiki"] = wiki_train
+            raw_datasets["validation"] = wiki_val
 
         else:
             raise ValueError(f"Unknown dataset, {dataset_setup}")

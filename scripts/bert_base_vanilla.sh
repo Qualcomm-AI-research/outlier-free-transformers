@@ -27,4 +27,6 @@ accelerate launch --config_file accelerate_configs/1gpu_fp16.yaml run_mlm.py \
 --tb_scalar_log_interval 2000 \
 --tb_hist_log_interval 100000 \
 --attn_softmax vanilla \
---output_dir output
+--output_dir output \
+--train_percentage 1 \
+--validation_percentage 1 \
