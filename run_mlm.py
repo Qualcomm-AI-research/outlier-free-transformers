@@ -370,7 +370,7 @@ def main():
                 k: [t[i : i + max_seq_length] for i in range(0, total_length, max_seq_length)]
                 for k, t in concatenated_examples.items()
             }
-            result['count'] = total_length
+            result['count'] = [len(t) for t in result["input_ids"]]
             return result
 
         # Note that with `batched=True`, this map processes 1,000 texts together, so group_texts
@@ -391,7 +391,7 @@ def main():
                 desc=f"Grouping texts in chunks of {max_seq_length}",
             )
             
-        total_tokens = sum(sum(batch["token_count"]) for batch in tokenized_datasets)
+        total_tokens = sum(sum(batch.pop("count")) for batch in tokenized_datasets)
         accelerator.print(f"token count (train + val): {total_tokens}")
         
         if dataset_setup == DatasetSetups.bookcorpus_and_wiki:
