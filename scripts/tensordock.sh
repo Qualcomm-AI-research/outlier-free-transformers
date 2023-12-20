@@ -15,6 +15,5 @@ git checkout tensordock
 
 # README install
 skyy
-pip install torch==1.13.0 torchvision==0.16.0
 pip install -r docker/requirements.txt
 wandb login

@@ -109,10 +109,18 @@ def main():
     if args.with_tracking:
         accelerator_log_kwargs["log_with"] = args.report_to
         accelerator_log_kwargs["project_dir"] = args.output_dir
+        
         # MZ: Support WandB logging
-        accelerator_log_kwargs["run_name"] = args.config_name + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-        os.environ['WANDB_PROJECT'] = args.project_name
-        os.environ['WANDB_LOG_MODEL'] = 'checkpoint' # log all model checkpoints as WandB artifacts
+        if args.report_to == 'wandb':
+            import wandb
+            wandb_run_name = args.config_name + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+            wandb.init(
+                project=args.project_name,
+                name=wandb_run_name,
+                config=vars(args),
+                resume=args.resume_from_checkpoint,
+            )
+            os.environ['WANDB_LOG_MODEL'] = 'checkpoint' # upload model artifacts
 
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps, **accelerator_log_kwargs
