@@ -89,7 +89,7 @@ def main():
 
 
     accelerator = Accelerator(
-        gradient_accumulation_steps=args.gradient_accumulation_steps, **accelerator_log_kwargs
+        gradient_accumulation_steps=config.gradient_accumulation_steps, **accelerator_log_kwargs
     )
     accelerator.project_configuration.total_limit = 1
     accelerator.project_configuration.automatic_checkpoint_naming = True
@@ -191,7 +191,6 @@ def main():
             config,
             softmax_fn=SOFTMAX_MAPPING[args.attn_softmax],
             alpha=args.alpha,
-            max_seq_length=args.max_seq_length,
             skip_attn=args.skip_attn,
             attn_gate_type=AttentionGateType[args.attn_gate_type],
             attn_gate_init=args.attn_gate_init,
@@ -234,21 +233,21 @@ def main():
         f"\t= Total (encoder):\t{n_embeddings + n_encoder}\n"
     )
     
-    accelerator.print(f"{args.gradient_accumulation_steps} grad accum steps * {accelerator.state.num_processes} processes * {args.per_device_train_batch_size} batch size * {args.max_seq_length} max seq len")
+    accelerator.print(f"{config.gradient_accumulation_steps} grad accum steps * {accelerator.state.num_processes} processes * {config.per_device_train_batch_size} batch size * {config.max_seq_length} max seq len")
     
     tokens_per_iter = (
-        args.gradient_accumulation_steps * accelerator.state.num_processes * args.per_device_train_batch_size * args.max_seq_length
+        config.gradient_accumulation_steps * accelerator.state.num_processes * config.per_device_train_batch_size * config.max_seq_length
     )
     accelerator.print(f"tokens per iteration will be: {tokens_per_iter:,}")
     accelerator.print(
-        f"breaks down as: {args.gradient_accumulation_steps} grad accum steps * {accelerator.state.num_processes} processes * {args.per_device_train_batch_size} batch size * {args.max_seq_length} max seq len"
+        f"breaks down as: {config.gradient_accumulation_steps} grad accum steps * {accelerator.state.num_processes} processes * {config.per_device_train_batch_size} batch size * {config.max_seq_length} max seq len"
     )
 
     # Get the datasets.
     # In distributed training, the load_dataset function guarantee that only one local process can
     # concurrently download the dataset.
     tokenized_book_wiki_path = (
-        Path(args.data_cache_dir) / f"tokenized_book_wiki_{args.max_seq_length}"
+        Path(args.data_cache_dir) / f"tokenized_book_wiki_{config.max_seq_length}"
     )
     if dataset_setup == DatasetSetups.bookcorpus_and_wiki and tokenized_book_wiki_path.exists():
         accelerator.print(f"Loading tokenized dataset from {str(tokenized_book_wiki_path)}")
@@ -313,7 +312,7 @@ def main():
         # Preprocessing the datasets.
 
         # Check sequence length
-        if args.max_seq_length is None:
+        if config.max_seq_length is None:
             max_seq_length = tokenizer.model_max_length
             if max_seq_length > 1024:
                 logger.warning(
@@ -323,13 +322,13 @@ def main():
                 )
                 max_seq_length = 1024
         else:
-            if args.max_seq_length > tokenizer.model_max_length:
+            if config.max_seq_length > tokenizer.model_max_length:
                 logger.warning(
-                    f"The max_seq_length passed ({args.max_seq_length}) is larger than the maximum "
+                    f"The max_seq_length passed ({config.max_seq_length}) is larger than the maximum "
                     f"length for the model ({tokenizer.model_max_length}). Using "
                     f"max_seq_length={tokenizer.model_max_length}."
                 )
-            max_seq_length = min(args.max_seq_length, tokenizer.model_max_length)
+            max_seq_length = min(config.max_seq_length, tokenizer.model_max_length)
 
         # Tokenize all the texts.
         # YB: removed line-by-line option as we'll likely never use it
@@ -427,13 +426,13 @@ def main():
         train_dataset,
         shuffle=True,
         collate_fn=data_collator,
-        batch_size=args.per_device_train_batch_size,
+        batch_size=config.per_device_train_batch_size,
         num_workers=args.preprocessing_num_workers,
     )
     eval_dataloader = DataLoader(
         eval_dataset,
         collate_fn=data_collator,
-        batch_size=args.per_device_eval_batch_size,
+        batch_size=config.per_device_eval_batch_size,
         num_workers=args.preprocessing_num_workers,
     )
 
@@ -452,20 +451,20 @@ def main():
             "weight_decay": 0.0,
         },
     ]
-    optimizer = torch.optim.AdamW(optimizer_grouped_parameters, lr=args.learning_rate)
+    optimizer = torch.optim.AdamW(optimizer_grouped_parameters, lr=config.learning_rate)
 
     # LR Scheduler and math around the number of training steps.
     overrode_max_train_steps = False
-    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
-    if args.max_train_steps is None:
-        args.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
+    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / config.gradient_accumulation_steps)
+    if config.max_train_steps is None:
+        config.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
         overrode_max_train_steps = True
 
     lr_scheduler = get_scheduler(
         name=args.lr_scheduler_type,
         optimizer=optimizer,
-        num_warmup_steps=args.num_warmup_steps * args.gradient_accumulation_steps,
-        num_training_steps=args.max_train_steps * args.gradient_accumulation_steps,
+        num_warmup_steps=args.num_warmup_steps * config.gradient_accumulation_steps,
+        num_training_steps=config.max_train_steps * config.gradient_accumulation_steps,
     )
 
     # Prepare everything with our `accelerator`.
@@ -475,11 +474,11 @@ def main():
 
     # We need to recalculate our total training steps as the size of the training dataloader may
     # have changed.
-    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
+    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / config.gradient_accumulation_steps)
     if overrode_max_train_steps:
-        args.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
+        config.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
     # Afterwards we recalculate our number of training epochs
-    args.num_train_epochs = math.ceil(args.max_train_steps / num_update_steps_per_epoch)
+    args.num_train_epochs = math.ceil(config.max_train_steps / num_update_steps_per_epoch)
 
     # Figure out how many steps we should save the Accelerator states
     checkpointing_steps = args.checkpointing_steps
@@ -496,24 +495,24 @@ def main():
 
     # Train!
     total_batch_size = (
-        args.per_device_train_batch_size
+        config.per_device_train_batch_size
         * accelerator.num_processes
-        * args.gradient_accumulation_steps
+        * config.gradient_accumulation_steps
     )
 
     logger.info("***** Running training *****")
     logger.info(f"  Num examples = {len(train_dataset)}")
     logger.info(f"  Num Epochs = {args.num_train_epochs}")
-    logger.info(f"  Instantaneous batch size per device = {args.per_device_train_batch_size}")
+    logger.info(f"  Instantaneous batch size per device = {config.per_device_train_batch_size}")
     logger.info(
         f"  Total train batch size (w. parallel, distributed & accumulation) = "
         f"{total_batch_size}"
     )
-    logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
-    logger.info(f"  Total optimization steps = {args.max_train_steps}")
+    logger.info(f"  Gradient Accumulation steps = {config.gradient_accumulation_steps}")
+    logger.info(f"  Total optimization steps = {config.max_train_steps}")
 
     # Only show the progress bar once on each machine.
-    progress_bar = tqdm(range(args.max_train_steps), disable=not accelerator.is_local_main_process)
+    progress_bar = tqdm(range(config.max_train_steps), disable=not accelerator.is_local_main_process)
     completed_steps = 0
     starting_epoch = 0
 
@@ -537,7 +536,7 @@ def main():
         else:
             # need to multiply `gradient_accumulation_steps` to reflect real steps
             resume_step = (
-                int(training_difference.replace("step_", "")) * args.gradient_accumulation_steps
+                int(training_difference.replace("step_", "")) * config.gradient_accumulation_steps
             )
             starting_epoch = resume_step // len(train_dataloader)
             resume_step -= starting_epoch * len(train_dataloader)
@@ -564,7 +563,7 @@ def main():
             # We need to skip steps until we reach the resumed step
             if args.resume_from_checkpoint and epoch == starting_epoch:
                 if resume_step is not None and step < resume_step:
-                    if step % args.gradient_accumulation_steps == 0:
+                    if step % config.gradient_accumulation_steps == 0:
                         progress_bar.update(1)
                         completed_steps += 1
                     continue
@@ -696,7 +695,7 @@ def main():
                                     f"Could not log act histogram for {name} at step {completed_steps}"
                                 )
 
-            if completed_steps >= args.max_train_steps:
+            if completed_steps >= config.max_train_steps:
                 break
 
         # ** Evaluation **
@@ -707,7 +706,7 @@ def main():
                 outputs = model(**batch)
 
             loss = outputs.loss
-            loss_ = accelerator.gather_for_metrics(loss.repeat(args.per_device_eval_batch_size))
+            loss_ = accelerator.gather_for_metrics(loss.repeat(config.per_device_eval_batch_size))
             losses.append(loss_)
 
         losses = torch.cat(losses)

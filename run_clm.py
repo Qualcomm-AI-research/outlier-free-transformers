@@ -123,7 +123,7 @@ def main():
             os.environ['WANDB_LOG_MODEL'] = 'checkpoint' # upload model artifacts
 
     accelerator = Accelerator(
-        gradient_accumulation_steps=args.gradient_accumulation_steps, **accelerator_log_kwargs
+        gradient_accumulation_steps=config.gradient_accumulation_steps, **accelerator_log_kwargs
     )
     accelerator.project_configuration.total_limit = 1
     accelerator.project_configuration.automatic_checkpoint_naming = True
@@ -446,13 +446,13 @@ def main():
         train_dataset,
         shuffle=True,
         collate_fn=default_data_collator,
-        batch_size=args.per_device_train_batch_size,
+        batch_size=config.per_device_train_batch_size,
         num_workers=args.preprocessing_num_workers,
     )
     eval_dataloader = DataLoader(
         eval_dataset,
         collate_fn=default_data_collator,
-        batch_size=args.per_device_eval_batch_size,
+        batch_size=config.per_device_eval_batch_size,
         num_workers=args.preprocessing_num_workers,
     )
 
@@ -479,17 +479,17 @@ def main():
         },
     ]
     optimizer = torch.optim.AdamW(
-        optimizer_grouped_parameters, lr=args.learning_rate, betas=(0.9, 0.95)
+        optimizer_grouped_parameters, lr=config.learning_rate, betas=(0.9, 0.95)
     )  # <- as per OPT paper
 
     # Scheduler and math around the number of training steps.
     overrode_max_train_steps = False
-    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
-    if args.max_train_steps is None:
-        args.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
+    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / config.gradient_accumulation_steps)
+    if config.max_train_steps is None:
+        config.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
         overrode_max_train_steps = True
 
-    w = args.num_warmup_steps / max(1.0, args.max_train_steps)
+    w = args.num_warmup_steps / max(1.0, config.max_train_steps)
     eps = args.final_lr_fraction
     a = 1 / (1 - (1.0 - w) * eps)
 
@@ -497,7 +497,7 @@ def main():
         name=args.lr_scheduler_type,
         optimizer=optimizer,
         num_warmup_steps=int(args.num_warmup_steps * a),
-        num_training_steps=int(args.max_train_steps * a),
+        num_training_steps=int(config.max_train_steps * a),
     )
 
     # Prepare everything with our `accelerator`.
@@ -506,11 +506,11 @@ def main():
     )
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
-    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
+    num_update_steps_per_epoch = math.ceil(len(train_dataloader) / config.gradient_accumulation_steps)
     if overrode_max_train_steps:
-        args.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
+        config.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
     # Afterwards we recalculate our number of training epochs
-    args.num_train_epochs = math.ceil(args.max_train_steps / num_update_steps_per_epoch)
+    args.num_train_epochs = math.ceil(config.max_train_steps / num_update_steps_per_epoch)
 
     # Figure out how many steps we should save the Accelerator states
     checkpointing_steps = args.checkpointing_steps
@@ -527,22 +527,22 @@ def main():
 
     # Train!
     total_batch_size = (
-        args.per_device_train_batch_size
+        config.per_device_train_batch_size
         * accelerator.num_processes
-        * args.gradient_accumulation_steps
+        * config.gradient_accumulation_steps
     )
 
     logger.info("***** Running training *****")
     logger.info(f"  Num examples = {len(train_dataset)}")
     logger.info(f"  Num Epochs = {args.num_train_epochs}")
-    logger.info(f"  Instantaneous batch size per device = {args.per_device_train_batch_size}")
+    logger.info(f"  Instantaneous batch size per device = {config.per_device_train_batch_size}")
     logger.info(
         f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}"
     )
-    logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
-    logger.info(f"  Total optimization steps = {args.max_train_steps}")
+    logger.info(f"  Gradient Accumulation steps = {config.gradient_accumulation_steps}")
+    logger.info(f"  Total optimization steps = {config.max_train_steps}")
     # Only show the progress bar once on each machine.
-    progress_bar = tqdm(range(args.max_train_steps), disable=not accelerator.is_local_main_process)
+    progress_bar = tqdm(range(config.max_train_steps), disable=not accelerator.is_local_main_process)
     completed_steps = 0
     starting_epoch = 0
 
@@ -565,7 +565,7 @@ def main():
         completed_steps = int(training_difference.replace("checkpoint_", ""))
         logger.info(f"Resuming training from opt. step {completed_steps} ...")
         # total number of forward passes (since the start of the training):
-        resume_step = completed_steps * args.gradient_accumulation_steps
+        resume_step = completed_steps * config.gradient_accumulation_steps
         # compute starting epoch
         starting_epoch = resume_step // len(train_dataloader)
         # number of forward passes (since the start of the current epoch):
@@ -711,7 +711,7 @@ def main():
                                 f"Could not log act histogram for {name} at step {completed_steps}"
                             )
 
-            if completed_steps >= args.max_train_steps:
+            if completed_steps >= config.max_train_steps:
                 break
 
         # ---------------------------------
@@ -738,7 +738,7 @@ def main():
                 outputs = model(**batch)
 
             loss = outputs.loss
-            loss_ = accelerator.gather_for_metrics(loss.repeat(args.per_device_eval_batch_size))
+            loss_ = accelerator.gather_for_metrics(loss.repeat(config.per_device_eval_batch_size))
             losses.append(loss_)
 
             # compute inf norms & kurtosis (>>>)

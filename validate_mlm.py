@@ -108,7 +108,7 @@ def main():
             )
 
     accelerator = Accelerator(
-        gradient_accumulation_steps=args.gradient_accumulation_steps, **accelerator_log_kwargs
+        gradient_accumulation_steps=config.gradient_accumulation_steps, **accelerator_log_kwargs
     )
 
     logger.info(accelerator.state)
@@ -403,7 +403,7 @@ def main():
     eval_dataloader = DataLoader(
         eval_dataset,
         collate_fn=data_collator,
-        batch_size=args.per_device_eval_batch_size,
+        batch_size=config.per_device_eval_batch_size,
         num_workers=args.preprocessing_num_workers,
     )
 
@@ -503,7 +503,7 @@ def main():
             outputs = model(**batch)
 
         loss = outputs.loss
-        loss_ = accelerator.gather_for_metrics(loss.repeat(args.per_device_eval_batch_size))
+        loss_ = accelerator.gather_for_metrics(loss.repeat(config.per_device_eval_batch_size))
         losses.append(loss_)
 
         # compute inf norms
