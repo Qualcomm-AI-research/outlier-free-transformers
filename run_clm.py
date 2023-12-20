@@ -674,42 +674,42 @@ def main():
                         x_inf_norm = max(x.max().item(), -x.min().item())
                         accelerator.log({f"{name}.act_inf_norm": x_inf_norm}, step=completed_steps)
 
-                # TB log histograms
-                if (
-                    args.with_tracking
-                    and accelerator.is_main_process
-                    and args.extra_tb_stats
-                    and completed_steps % args.tb_hist_log_interval == 0
-                ):
-                    tb_writer = accelerator.trackers[0].writer
+                # # TB log histograms
+                # if (
+                #     args.with_tracking
+                #     and accelerator.is_main_process
+                #     and args.extra_tb_stats
+                #     and completed_steps % args.tb_hist_log_interval == 0
+                # ):
+                #     tb_writer = accelerator.trackers[0].writer
 
-                    # weight histograms
-                    for name, module in model.named_modules():
-                        if hasattr(module, "weight"):
-                            w = module.weight
-                            try:
-                                with warnings.catch_warnings():
-                                    warnings.filterwarnings("ignore", category=DeprecationWarning)
-                                    tb_writer.add_histogram(
-                                        f"{name}.weight_hist", w, global_step=completed_steps
-                                    )
-                            except:
-                                logger.warn(
-                                    f"Could not log weight histogram for {name} at step {completed_steps}"
-                                )
+                #     # weight histograms
+                #     for name, module in model.named_modules():
+                #         if hasattr(module, "weight"):
+                #             w = module.weight
+                #             try:
+                #                 with warnings.catch_warnings():
+                #                     warnings.filterwarnings("ignore", category=DeprecationWarning)
+                #                     tb_writer.add_histogram(
+                #                         f"{name}.weight_hist", w, global_step=completed_steps
+                #                     )
+                #             except:
+                #                 logger.warn(
+                #                     f"Could not log weight histogram for {name} at step {completed_steps}"
+                #                 )
 
-                    # act histograms
-                    for name, x in act_dict.items():
-                        try:
-                            with warnings.catch_warnings():
-                                warnings.filterwarnings("ignore", category=DeprecationWarning)
-                                tb_writer.add_histogram(
-                                    f"{name}.act_hist", x, global_step=completed_steps
-                                )
-                        except:
-                            logger.warn(
-                                f"Could not log act histogram for {name} at step {completed_steps}"
-                            )
+                #     # act histograms
+                #     for name, x in act_dict.items():
+                #         try:
+                #             with warnings.catch_warnings():
+                #                 warnings.filterwarnings("ignore", category=DeprecationWarning)
+                #                 tb_writer.add_histogram(
+                #                     f"{name}.act_hist", x, global_step=completed_steps
+                #                 )
+                #         except:
+                #             logger.warn(
+                #                 f"Could not log act histogram for {name} at step {completed_steps}"
+                #             )
 
             if completed_steps >= config.max_train_steps:
                 break

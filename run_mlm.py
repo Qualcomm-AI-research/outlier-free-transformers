@@ -78,7 +78,7 @@ def main():
         # MZ: Support WandB logging
         if args.report_to == 'wandb':
             import wandb
-            wandb_run_name = args.config_name + '-' + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+            wandb_run_name = args.run_name + '-' + datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
             wandb.init(
                 project=args.project_name,
                 name=wandb_run_name,
@@ -232,8 +232,6 @@ def main():
         f"\t= Total (pre-training):\t{n_embeddings + n_encoder + n_head}\n"
         f"\t= Total (encoder):\t{n_embeddings + n_encoder}\n"
     )
-    
-    accelerator.print(f"{args.gradient_accumulation_steps} grad accum steps * {accelerator.state.num_processes} processes * {config.per_device_train_batch_size} batch size * {config.max_seq_length} max seq len")
     
     tokens_per_iter = (
         args.gradient_accumulation_steps * accelerator.state.num_processes * config.per_device_train_batch_size * config.max_seq_length
@@ -429,7 +427,7 @@ def main():
     if len(train_dataset) > 3:
         # Log a few random samples from the training set:
         for index in random.sample(range(len(train_dataset)), 3):
-            logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
+            logger.info(f"Sample {index} of the training set: {train_dataset[index]['input_ids'][:100]} ... ")
 
     # Data collator
     # This one will take care of randomly masking the tokens.
@@ -504,9 +502,11 @@ def main():
     # We need to initialize the trackers we use, and also store our configuration.
     # The trackers initializes automatically on the main process.
     if args.with_tracking:
-        experiment_config = vars(args)
-        # TensorBoard cannot log Enums, need the raw value
-        experiment_config["lr_scheduler_type"] = experiment_config["lr_scheduler_type"].value
+        experiment_config = {**vars(args), **config.to_dict()}
+        # WandB hates logging Enums, need the raw value
+        for key in ["alpha", "attn_dropout", "block_size", "hidden_dropout", "max_seq_length", "max_train_steps", "model_name_or_path", "percentile", "resume_from_checkpoint", "lr_scheduler_type"]:
+            if key in experiment_config:
+                experiment_config[key] = experiment_config[key].value
         accelerator.init_trackers(args.project_name, experiment_config)
 
     # Train!

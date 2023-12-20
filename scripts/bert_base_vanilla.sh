@@ -1,5 +1,7 @@
 #!/bin/bash
 accelerate launch --config_file accelerate_configs/1gpu_fp16.yaml run_mlm.py \
+--config_path model_configs/bert-15m.yaml \
+--run_name bert-vanilla-15m \
 --with_tracking \
 --report_to wandb \
 --project_name quantizable_transformers \
@@ -17,9 +19,8 @@ accelerate launch --config_file accelerate_configs/1gpu_fp16.yaml run_mlm.py \
 --max_grad_norm 1.0 \
 --weight_decay 0.01 \
 --config_name bert-base-uncased \
---config_path model_configs/bert-15m.yaml \
 --checkpointing_steps 50000 \
---gradient_accumulation_steps 1 \
+--gradient_accumulation_steps 8 \
 --attn_softmax vanilla \
 --output_dir output \
 --train_percentage 1 \
