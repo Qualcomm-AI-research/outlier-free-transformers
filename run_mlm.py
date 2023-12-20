@@ -233,6 +233,8 @@ def main():
         f"\t= Total (encoder):\t{n_embeddings + n_encoder}\n"
     )
     
+    accelerator.print(f"{args.gradient_accumulation_steps} grad accum steps * {accelerator.state.num_processes} processes * {args.per_device_train_batch_size} batch size * {args.max_seq_length} max seq len")
+    
     tokens_per_iter = (
         args.gradient_accumulation_steps * accelerator.state.num_processes * args.per_device_train_batch_size * args.max_seq_length
     )
