@@ -234,11 +234,11 @@ def main():
     )
     
     tokens_per_iter = (
-        args.gradient_accumulation_steps * accelerator.num_processes * args.per_device_train_batch_size * args.max_seq_length
+        args.gradient_accumulation_steps * accelerator.state.num_processes * args.per_device_train_batch_size * args.max_seq_length
     )
     accelerator.print(f"tokens per iteration will be: {tokens_per_iter:,}")
     accelerator.print(
-        f"breaks down as: {args.gradient_accumulation_steps} grad accum steps * {accelerator.num_processes} processes * {args.per_device_train_batch_size} batch size * {args.max_seq_length} max seq len"
+        f"breaks down as: {args.gradient_accumulation_steps} grad accum steps * {accelerator.state.num_processes} processes * {args.per_device_train_batch_size} batch size * {args.max_seq_length} max seq len"
     )
 
     # Get the datasets.
