@@ -392,7 +392,7 @@ def main():
             
             
         def count_tokens(examples):
-            return {'sum': sum(len(example['input_ids']) for example in examples)}
+            return {'sum': [len(example['input_ids']) for example in examples]}
         
         # We can use .map to .reduce: https://github.com/huggingface/datasets/pull/5533#issuecomment-1440571658
         
@@ -402,19 +402,11 @@ def main():
                 input_columns=['input_ids'],
                 batched=True,
                 num_proc=args.preprocessing_num_workers,
+                keep_in_memory=True,
                 desc=f'Count tokens'
             )
-            accelerator.print(f"Total tokens: {sum(token_ds['sum'])}")
-        
-        def count_tokens(dataset_dict: DatasetDict) -> dict:
-            token_counts = {}
-            for subset in dataset_dict.keys():
-                total_tokens = sum(len(example['input_ids']) for example in tqdm(dataset_dict[subset], desc=f'Count {subset}'))
-                token_counts[subset] = total_tokens
-
-            return token_counts
-        
-        accelerator.print(f"Token counts: {count_tokens(tokenized_datasets)}")
+            token_sum = sum(token_ds['sum'])
+            accelerator.print(f"Total tokens: {token_sum}")
         
         if dataset_setup == DatasetSetups.bookcorpus_and_wiki:
             # Save the tokenizer's hard work
