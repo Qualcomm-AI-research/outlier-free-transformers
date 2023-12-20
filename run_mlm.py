@@ -136,6 +136,7 @@ def main():
             config_changes = yaml.safe_load(f)
 
         for key, value in config_changes.items():
+            accelerator.print(f"config: {key}={value}")
             setattr(config, key, value)
 
     # Set dropout rates, if specified
