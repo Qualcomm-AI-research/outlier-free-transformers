@@ -379,6 +379,10 @@ def main():
                 load_from_cache_file=not args.overwrite_cache,
                 desc=f"Grouping texts in chunks of {max_seq_length}",
             )
+            
+            if dataset_setup == DatasetSetups.bookcorpus_and_wiki:
+                # Save the tokenizer's hard work
+                tokenized_datasets.save_to_disk(str(tokenized_book_wiki_path))
 
         # <end elif: do tokenization>
 

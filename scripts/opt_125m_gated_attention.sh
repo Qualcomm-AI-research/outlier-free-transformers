@@ -8,7 +8,7 @@ accelerate launch --config_file accelerate_configs/1gpu_fp16.yaml run_clm.py \
 --extra_tb_stats \
 --seed 1000 \
 --dataset_setup bookcorpus_and_wiki \
---preprocessing_num_workers 4 \
+--preprocessing_num_workers 6 \
 --data_cache_dir ~/.hf_data \
 --model_cache_dir ~/.hf_cache \
 --model_type opt \
