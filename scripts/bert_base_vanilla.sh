@@ -17,7 +17,6 @@ accelerate launch --config_file accelerate_configs/1gpu_fp16.yaml run_mlm.py \
 --lr_scheduler_type linear \
 --max_train_steps 1000000 \
 --num_warmup_steps 10000 \
-# 1xV100-16
 --per_device_train_batch_size 48 \
 --per_device_eval_batch_size 48 \
 --gradient_accumulation_steps 1 \
