@@ -11,22 +11,15 @@ accelerate launch --config_file accelerate_configs/1gpu_fp16.yaml run_mlm.py \
 --model_cache_dir ~/.hf_cache \
 --model_type bert \
 --tokenizer_name bert-base-uncased \
---max_seq_length 128 \
 --mlm_probability 0.15 \
---learning_rate 0.0001 \
---lr_scheduler_type linear \
---max_train_steps 1000000 \
+--lr_scheduler_type cosine \
 --num_warmup_steps 10000 \
---per_device_train_batch_size 48 \
---per_device_eval_batch_size 48 \
---gradient_accumulation_steps 1 \
 --max_grad_norm 1.0 \
 --weight_decay 0.01 \
 --config_name bert-base-uncased \
---checkpointing_steps 100000 \
---tb_scalar_log_interval 2000 \
---tb_hist_log_interval 100000 \
+--config_path model_configs/bert-15m.yaml \
+--checkpointing_steps 50000 \
 --attn_softmax vanilla \
 --output_dir output \
 --train_percentage 1 \
---validation_percentage 1 \
+--validation_percentage 1

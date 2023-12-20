@@ -232,6 +232,14 @@ def main():
         f"\t= Total (pre-training):\t{n_embeddings + n_encoder + n_head}\n"
         f"\t= Total (encoder):\t{n_embeddings + n_encoder}\n"
     )
+    
+    tokens_per_iter = (
+        args.gradient_accumulation_steps * accelerator.num_processes * args.per_device_train_batch_size * args.max_seq_length
+    )
+    accelerator.print(f"tokens per iteration will be: {tokens_per_iter:,}")
+    accelerator.print(
+        f"breaks down as: {args.gradient_accumulation_steps} grad accum steps * {accelerator.num_processes} processes * {args.per_device_train_batch_size} batch size * {args.max_seq_length} max seq len"
+    )
 
     # Get the datasets.
     # In distributed training, the load_dataset function guarantee that only one local process can
@@ -360,6 +368,7 @@ def main():
                 k: [t[i : i + max_seq_length] for i in range(0, total_length, max_seq_length)]
                 for k, t in concatenated_examples.items()
             }
+            result['count'] = total_length
             return result
 
         # Note that with `batched=True`, this map processes 1,000 texts together, so group_texts
@@ -380,9 +389,12 @@ def main():
                 desc=f"Grouping texts in chunks of {max_seq_length}",
             )
             
-            if dataset_setup == DatasetSetups.bookcorpus_and_wiki:
-                # Save the tokenizer's hard work
-                tokenized_datasets.save_to_disk(str(tokenized_book_wiki_path))
+        total_tokens = sum(sum(batch["token_count"]) for batch in tokenized_datasets)
+        accelerator.print(f"token count (train + val): {total_tokens}")
+        
+        if dataset_setup == DatasetSetups.bookcorpus_and_wiki:
+            # Save the tokenizer's hard work
+            tokenized_datasets.save_to_disk(str(tokenized_book_wiki_path))
 
         # <end elif: do tokenization>
 

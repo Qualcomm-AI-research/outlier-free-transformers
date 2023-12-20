@@ -398,6 +398,7 @@ def main():
                 for k, t in concatenated_examples.items()
             }
             result["labels"] = result["input_ids"].copy()
+            result['count'] = total_length
             return result
 
         # Note that with `batched=True`, this map processes 1,000 texts together, so group_texts throws away a remainder
@@ -417,9 +418,12 @@ def main():
                 desc=f"Grouping texts in chunks of {block_size}",
             )
             
-            if dataset_setup == DatasetSetups.bookcorpus_and_wiki:
-                # Save the tokenizer's hard work
-                tokenized_datasets.save_to_disk(str(tokenized_book_wiki_path))
+        total_tokens = sum(sum(batch["token_count"]) for batch in tokenized_datasets)
+        accelerator.print(f"Total number of tokens in the dataset: {total_tokens}")
+            
+        if dataset_setup == DatasetSetups.bookcorpus_and_wiki:
+            # Save the tokenizer's hard work
+            tokenized_datasets.save_to_disk(str(tokenized_book_wiki_path))
 
         # <end elif: do tokenization>
 
