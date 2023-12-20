@@ -397,19 +397,20 @@ def main():
         # We can use .map to .reduce: https://github.com/huggingface/datasets/pull/5533#issuecomment-1440571658
         
         with accelerator.main_process_first():
-            token_ds = tokenized_datasets.map(
+            token_dataset_dict = tokenized_datasets.map(
                 count_tokens,
                 input_columns=['input_ids'],
                 batched=True,
                 num_proc=args.preprocessing_num_workers,
                 keep_in_memory=True,
+                remove_columns=tokenized_datasets.column_names,
                 desc=f'Count tokens'
             )
-            print(token_ds.column_names)
-            print(token_ds)
-            print(token_ds.keys())
-            print(token_ds.values())
-            token_sum = sum(token_ds['sum'])
+            print(token_dataset_dict.column_names)
+            print(token_dataset_dict)
+            print(token_dataset_dict.keys())
+            print(token_dataset_dict.values())
+            token_sum = sum(ds['sum'] for ds in token_dataset_dict)
             accelerator.print(f"Total tokens: {token_sum}")
         
         if dataset_setup == DatasetSetups.bookcorpus_and_wiki:
