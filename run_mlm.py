@@ -390,9 +390,12 @@ def main():
                 load_from_cache_file=not args.overwrite_cache,
                 desc=f"Grouping texts in chunks of {max_seq_length}",
             )
-            
-        total_tokens = sum(sum(batch.pop("count")) for batch in tokenized_datasets)
-        accelerator.print(f"token count (train + val): {total_tokens}")
+        
+        token_counts = {}
+        for split in tokenized_datasets.keys():
+            tokens_for_split = sum(sum(batch.pop("count") for batch in tokenized_datasets[split]))
+            token_counts[split] = tokens_for_split
+        accelerator.print(f"total token counts: {token_counts}")
         
         if dataset_setup == DatasetSetups.bookcorpus_and_wiki:
             # Save the tokenizer's hard work
