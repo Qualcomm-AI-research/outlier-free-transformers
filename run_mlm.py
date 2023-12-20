@@ -405,6 +405,10 @@ def main():
                 keep_in_memory=True,
                 desc=f'Count tokens'
             )
+            print(token_ds.column_names)
+            print(token_ds)
+            print(token_ds.keys())
+            print(token_ds.values())
             token_sum = sum(token_ds['sum'])
             accelerator.print(f"Total tokens: {token_sum}")
         
