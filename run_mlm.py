@@ -389,6 +389,22 @@ def main():
                 load_from_cache_file=not args.overwrite_cache,
                 desc=f"Grouping texts in chunks of {max_seq_length}",
             )
+            
+            
+        def count_tokens(examples):
+            return {'sum': sum(len(example['input_ids']) for example in examples)}
+        
+        # We can use .map to .reduce: https://github.com/huggingface/datasets/pull/5533#issuecomment-1440571658
+        
+        with accelerator.main_process_first():
+            token_ds = tokenized_datasets.map(
+                count_tokens,
+                input_columns=['input_ids'],
+                batched=True,
+                num_proc=args.preprocessing_num_workers,
+                desc=f'Count tokens'
+            )
+            accelerator.print(f"Total tokens: {sum(token_ds['sum'])}")
         
         def count_tokens(dataset_dict: DatasetDict) -> dict:
             token_counts = {}
